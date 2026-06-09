@@ -8,13 +8,8 @@
             <field name="subject">Nuevo documento disponible: {{ object.name }}</field>
             <field name="body_html"><![CDATA[
 <p>Hola,</p>
-<p>
-    Te informamos que se ha subido un nuevo documento a tu carpeta personal:
-    <strong>{{ object.name }}</strong>.
-</p>
-<p>
-    Podés verlo ingresando al portal de empleados con tu usuario habitual.
-</p>
+<p>Te informamos que se ha subido un nuevo documento a tu carpeta personal en el portal de empleados.</p>
+<p>Podés verlo ingresando al portal con tu usuario habitual.</p>
 <p>Si tenés alguna consulta, comunicate con el área de Recursos Humanos.</p>
 <br/>
 <p>Saludos,<br/>Recursos Humanos</p>
