@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extend sign.request search view to add groupby by signers -->
+    <record id="sign_request_view_search_inherit" model="ir.ui.view">
+        <field name="name">sign.request.search.inherit</field>
+        <field name="model">sign.request</field>
+        <field name="inherit_id" ref="sign.sign_request_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search/group" position="inside">
+                <filter name="group_by_signer" string="Signer" domain="[]" context="{'group_by': 'signer_partner_id'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
