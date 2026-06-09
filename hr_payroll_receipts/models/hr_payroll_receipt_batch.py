@@ -269,9 +269,9 @@ class HrPayrollReceiptBatch(models.Model):
                 'type': 'binary',
                 'res_model': 'hr.employee',
                 'res_id': line.employee_id.id,
-                'access_via_link': 'view',
+                'access_via_link': 'none',
                 'access_internal': 'view',
-                'is_access_via_link_hidden': False,
+                'is_access_via_link_hidden': True,
             }
             if folder:
                 doc_vals['folder_id'] = folder.id
