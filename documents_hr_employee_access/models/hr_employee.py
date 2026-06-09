@@ -39,7 +39,7 @@ class HrEmployee(models.Model):
             folder.write({
                 'owner_id': user.id if user else False,
                 'access_via_link': 'none',
-                'access_internal': 'none',
+                'access_internal': 'view',
                 'is_access_via_link_hidden': True,
                 'access_ids': access_ids_vals,
             })
