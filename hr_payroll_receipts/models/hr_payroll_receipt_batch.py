@@ -21,7 +21,7 @@ class HrPayrollReceiptBatch(models.Model):
         ('signed', 'Firmado'),
         ('split', 'Spliteado'),
         ('done', 'Distribuido'),
-    ], default='draft', tracking=True)
+    ], default='draft')
 
     source_pdf = fields.Binary("PDF Original", attachment=True)
     source_pdf_filename = fields.Char("Nombre archivo original")
