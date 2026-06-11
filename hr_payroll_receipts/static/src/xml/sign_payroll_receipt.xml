@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Button in the topbar (preview mode, next to Acciones/Descargar) -->
+    <t t-inherit="documents.DocumentsAction" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('btn-group')]" position="inside">
+            <button class="btn btn-secondary o_sign_payroll_receipt"
+                    t-on-click="onSignPayrollReceipt">
+                <i class="fa fa-pencil-square-o me-1"/>Firmar recibo
+            </button>
+        </xpath>
+    </t>
+
+</templates>

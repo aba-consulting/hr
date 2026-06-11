@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── List ──────────────────────────────────────────────────── -->
+    <record id="hr_payroll_receipt_batch_view_list" model="ir.ui.view">
+        <field name="name">hr.payroll.receipt.batch.list</field>
+        <field name="model">hr.payroll.receipt.batch</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="line_count" string="Recibos"/>
+                <field name="unmatched_count" string="Sin asignar"
+                    decoration-danger="unmatched_count > 0"/>
+                <field name="state" widget="badge"
+                    decoration-info="state == 'draft'"
+                    decoration-warning="state in ('signing', 'signed', 'split')"
+                    decoration-success="state == 'done'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form ──────────────────────────────────────────────────── -->
+    <record id="hr_payroll_receipt_batch_view_form" model="ir.ui.view">
+        <field name="name">hr.payroll.receipt.batch.form</field>
+        <field name="model">hr.payroll.receipt.batch</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <!-- Draft → Signing -->
+                    <button name="action_send_to_sign" type="object"
+                        string="Enviar a firmar" class="btn-primary"
+                        invisible="state != 'draft'"/>
+                    <button name="action_skip_sign" type="object"
+                        string="Omitir firma"
+                        invisible="state != 'draft'"/>
+
+                    <!-- Signing → Signed -->
+                    <button name="action_refresh_sign" type="object"
+                        string="Actualizar estado de firma" class="btn-primary"
+                        invisible="state != 'signing'"/>
+                    <button name="action_upload_signed" type="object"
+                        string="Confirmar PDF firmado"
+                        invisible="state != 'signing'"/>
+
+                    <!-- Signed → Split -->
+                    <button name="action_split" type="object"
+                        string="Splitear y asignar" class="btn-primary"
+                        invisible="state != 'signed'"/>
+
+                    <!-- Split → Done -->
+                    <button name="action_distribute" type="object"
+                        string="Distribuir a carpetas" class="btn-primary"
+                        invisible="state != 'split'"
+                        confirm="¿Depositar los recibos en las carpetas de cada empleado?"/>
+
+                    <!-- Done → Employee sign -->
+                    <button name="action_send_employee_sign" type="object"
+                        string="Enviar a firmar a empleados" class="btn-primary"
+                        invisible="state != 'done'"/>
+                    <button name="action_refresh_employee_signs" type="object"
+                        string="Actualizar firmas empleados"
+                        invisible="state != 'done'"/>
+
+                    <!-- Reset -->
+                    <button name="action_back_to_draft" type="object"
+                        string="Volver a borrador"
+                        invisible="state in ('draft', 'done')"
+                        confirm="Se perderán las líneas y el PDF firmado. ¿Continuar?"/>
+
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,signed,split,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Ej: Recibos Enero 2026"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="General">
+                            <field name="date"/>
+                            <field name="company_id"
+                                groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Archivos">
+                            <field name="source_pdf"
+                                filename="source_pdf_filename"/>
+                            <field name="source_pdf_filename" invisible="1"/>
+                            <field name="signed_pdf"
+                                filename="signed_pdf_filename"
+                                invisible="state == 'draft'"
+                                readonly="state not in ('signing',)"/>
+                            <field name="signed_pdf_filename" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Documents">
+                            <field name="document_folder_id"/>
+                            <field name="document_tag_id"/>
+                        </group>
+                        <group string="Firma"
+                            invisible="not sign_request_id">
+                            <field name="sign_request_id"/>
+                            <field name="sign_state" widget="badge"/>
+                        </group>
+                    </group>
+
+                    <!-- Lines (only after split) -->
+                    <notebook invisible="state in ('draft', 'signing', 'signed')">
+                        <page string="Recibos" name="lines">
+                            <field name="line_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="sequence"
+                                        widget="handle"/>
+                                    <field name="sequence"
+                                        string="Pág." readonly="1"
+                                        optional="show"/>
+                                    <field name="employee_id"/>
+                                    <field name="page_pdf"
+                                        filename="page_pdf_filename"/>
+                                    <field name="page_pdf_filename"
+                                        column_invisible="True"/>
+                                    <field name="state" widget="badge"
+                                        decoration-danger="state == 'pending'"
+                                        decoration-info="state in ('matched', 'sent_to_sign')"
+                                        decoration-success="state in ('distributed', 'employee_signed')"/>
+                                    <field name="employee_sign_state" widget="badge"
+                                        optional="show"
+                                        decoration-info="employee_sign_state == 'sent'"
+                                        decoration-success="employee_sign_state == 'signed'"/>
+                                    <field name="signed_pdf"
+                                        filename="signed_pdf_filename"
+                                        optional="hide"/>
+                                    <field name="signed_pdf_filename"
+                                        column_invisible="True"/>
+                                    <field name="document_id"
+                                        readonly="1" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Action ────────────────────────────────────────────────── -->
+    <record id="hr_payroll_receipt_batch_action" model="ir.actions.act_window">
+        <field name="name">Recibos de Sueldo</field>
+        <field name="res_model">hr.payroll.receipt.batch</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear un nuevo lote de recibos de sueldo
+            </p>
+            <p>
+                Subí un PDF con todos los recibos, firmalo, splitealo
+                y distribuilo a las carpetas de cada empleado.
+            </p>
+        </field>
+    </record>
+
+</odoo>

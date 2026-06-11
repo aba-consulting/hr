@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_payroll_receipt_batch_manager,hr.payroll.receipt.batch.manager,model_hr_payroll_receipt_batch,hr.group_hr_manager,1,1,1,1
+access_hr_payroll_receipt_batch_user,hr.payroll.receipt.batch.user,model_hr_payroll_receipt_batch,hr.group_hr_user,1,1,1,0
+access_hr_payroll_receipt_batch_portal,hr.payroll.receipt.batch.portal,model_hr_payroll_receipt_batch,base.group_portal,1,0,0,0
+access_hr_payroll_receipt_batch_public,hr.payroll.receipt.batch.public,model_hr_payroll_receipt_batch,base.group_public,1,0,0,0
+access_hr_payroll_receipt_line_manager,hr.payroll.receipt.line.manager,model_hr_payroll_receipt_line,hr.group_hr_manager,1,1,1,1
+access_hr_payroll_receipt_line_user,hr.payroll.receipt.line.user,model_hr_payroll_receipt_line,hr.group_hr_user,1,1,1,0
+access_hr_payroll_receipt_line_portal,hr.payroll.receipt.line.portal,model_hr_payroll_receipt_line,base.group_portal,1,0,0,0
+access_hr_payroll_receipt_line_public,hr.payroll.receipt.line.public,model_hr_payroll_receipt_line,base.group_public,1,0,0,0
+access_hr_payslip_portal,hr.payslip.portal.read,hr_payroll.model_hr_payslip,base.group_portal,1,0,0,0
+access_employer_signature_wizard_manager,hr.payroll.employer.signature.wizard.manager,model_hr_payroll_employer_signature_wizard,hr.group_hr_manager,1,1,1,1

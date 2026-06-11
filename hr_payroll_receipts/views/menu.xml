@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_payroll_receipts_root"
+        name="Recibos de Sueldo"
+        parent="hr.menu_hr_root"
+        sequence="30"/>
+
+    <menuitem id="menu_payroll_receipts_batch"
+        name="Lotes de Recibos"
+        parent="menu_payroll_receipts_root"
+        action="hr_payroll_receipt_batch_action"
+        sequence="10"/>
+
+</odoo>
