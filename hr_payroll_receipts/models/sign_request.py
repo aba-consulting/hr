@@ -1,6 +1,9 @@
+import base64
+import io
 import logging
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -95,3 +98,51 @@ class SignRequest(models.Model):
             self.env.cr.postcommit.add(_delete_docs_after_commit)
 
         return res
+
+    def action_merge_signed_pdfs(self):
+        """Merge signed PDFs from selected sign requests into a single PDF for download."""
+        try:
+            from pypdf import PdfWriter, PdfReader
+        except ImportError:
+            raise UserError(_("Falta la librería pypdf. Instalala con: pip install pypdf"))
+
+        signed_requests = self.filtered(lambda r: r.state == 'signed')
+        if not signed_requests:
+            raise UserError(_("No hay documentos firmados en la selección."))
+
+        writer = PdfWriter()
+        merged_count = 0
+
+        for req in signed_requests:
+            att = req.sudo().completed_document_attachment_ids[:1]
+            if not att or not att.datas:
+                _logger.warning("sign.request %s has no completed document, skipping.", req.id)
+                continue
+            try:
+                reader = PdfReader(io.BytesIO(base64.b64decode(att.datas)))
+                for page in reader.pages:
+                    writer.add_page(page)
+                merged_count += 1
+            except Exception as e:
+                _logger.warning("Could not read PDF for sign.request %s: %s", req.id, e)
+
+        if merged_count == 0:
+            raise UserError(_("No se pudieron leer los PDFs firmados de los documentos seleccionados."))
+
+        buf = io.BytesIO()
+        writer.write(buf)
+        merged_b64 = base64.b64encode(buf.getvalue()).decode()
+
+        attachment = self.env['ir.attachment'].sudo().create({
+            'name': 'recibos_firmados.pdf',
+            'datas': merged_b64,
+            'mimetype': 'application/pdf',
+            'res_model': 'sign.request',
+            'res_id': self.ids[0],
+        })
+
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/web/content/{attachment.id}?download=true',
+            'target': 'new',
+        }
