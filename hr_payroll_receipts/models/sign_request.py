@@ -100,7 +100,11 @@ class SignRequest(models.Model):
         return res
 
     def action_merge_signed_pdfs(self):
-        """Merge signed PDFs from selected sign requests into a single PDF for download."""
+        """Merge signed PDFs from selected sign requests into a single PDF for download.
+
+        Uses the same approach as Odoo's native sign controller _handle_completed_download:
+        calls _generate_completed_documents() if needed, then reads completed_document_ids[n].file.
+        """
         try:
             from pypdf import PdfWriter, PdfReader
         except ImportError:
@@ -112,42 +116,32 @@ class SignRequest(models.Model):
 
         writer = PdfWriter()
         merged_count = 0
+        errors = []
 
         for req in signed_requests.sudo():
-            # completed_document_ids -> sign.completed.document, field 'file' is the signed PDF binary
-            completed_docs = req.completed_document_ids
-            if not completed_docs:
-                # fallback: trigger generation if not yet done
-                try:
-                    req._generate_completed_documents()
-                    completed_docs = req.completed_document_ids
-                except Exception as e:
-                    _logger.warning("Could not generate completed document for sign.request %s: %s", req.id, e)
+            # Identical to Odoo's _handle_completed_download logic
+            if not req.completed_document_ids:
+                req._generate_completed_documents()
 
-            pdf_data = None
-            if completed_docs and completed_docs[:1].file:
-                pdf_data = completed_docs[:1].file
-            else:
-                # last fallback: completed_document_attachment_ids (skip certificate — first att is the signed PDF)
-                att = req.completed_document_attachment_ids.filtered(
-                    lambda a: a.mimetype == 'application/pdf' and 'certificate' not in (a.name or '').lower()
-                )[:1]
-                if att and att.datas:
-                    pdf_data = base64.b64decode(att.datas)
-
-            if not pdf_data:
-                _logger.warning("sign.request %s has no signed PDF, skipping.", req.id)
+            if not req.completed_document_ids:
+                errors.append(f"#{req.id} ({req.reference}): sin documento completado")
                 continue
-            try:
-                reader = PdfReader(io.BytesIO(pdf_data if isinstance(pdf_data, bytes) else base64.b64decode(pdf_data)))
-                for page in reader.pages:
-                    writer.add_page(page)
-                merged_count += 1
-            except Exception as e:
-                _logger.warning("Could not read PDF for sign.request %s: %s", req.id, e)
+
+            for cdoc in req.completed_document_ids:
+                if not cdoc.file:
+                    continue
+                try:
+                    reader = PdfReader(io.BytesIO(base64.b64decode(cdoc.file)))
+                    for page in reader.pages:
+                        writer.add_page(page)
+                    merged_count += 1
+                except Exception as e:
+                    errors.append(f"#{req.id} ({req.reference}): {e}")
+                    _logger.exception("Could not merge PDF for sign.request %s", req.id)
 
         if merged_count == 0:
-            raise UserError(_("No se pudieron leer los PDFs firmados de los documentos seleccionados."))
+            detail = '\n'.join(errors) if errors else _("Ningún documento tiene PDF completado.")
+            raise UserError(_("No se pudo generar el PDF combinado:\n%s", detail))
 
         buf = io.BytesIO()
         writer.write(buf)
