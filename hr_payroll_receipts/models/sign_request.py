@@ -113,13 +113,33 @@ class SignRequest(models.Model):
         writer = PdfWriter()
         merged_count = 0
 
-        for req in signed_requests:
-            att = req.sudo().completed_document_attachment_ids[:1]
-            if not att or not att.datas:
-                _logger.warning("sign.request %s has no completed document, skipping.", req.id)
+        for req in signed_requests.sudo():
+            # completed_document_ids -> sign.completed.document, field 'file' is the signed PDF binary
+            completed_docs = req.completed_document_ids
+            if not completed_docs:
+                # fallback: trigger generation if not yet done
+                try:
+                    req._generate_completed_documents()
+                    completed_docs = req.completed_document_ids
+                except Exception as e:
+                    _logger.warning("Could not generate completed document for sign.request %s: %s", req.id, e)
+
+            pdf_data = None
+            if completed_docs and completed_docs[:1].file:
+                pdf_data = completed_docs[:1].file
+            else:
+                # last fallback: completed_document_attachment_ids (skip certificate — first att is the signed PDF)
+                att = req.completed_document_attachment_ids.filtered(
+                    lambda a: a.mimetype == 'application/pdf' and 'certificate' not in (a.name or '').lower()
+                )[:1]
+                if att and att.datas:
+                    pdf_data = base64.b64decode(att.datas)
+
+            if not pdf_data:
+                _logger.warning("sign.request %s has no signed PDF, skipping.", req.id)
                 continue
             try:
-                reader = PdfReader(io.BytesIO(base64.b64decode(att.datas)))
+                reader = PdfReader(io.BytesIO(pdf_data if isinstance(pdf_data, bytes) else base64.b64decode(pdf_data)))
                 for page in reader.pages:
                     writer.add_page(page)
                 merged_count += 1
