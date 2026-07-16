@@ -102,10 +102,10 @@ class DocumentsDocument(models.Model):
                 'type_id': sign_type.id,
                 'responsible_id': signer_role.id,
                 'page': 1,
-                'posX': 0.30,
-                'posY': 0.87,
-                'width': 0.22,
-                'height': 0.05,
+                'posX': 0.10,  # Más a la izquierda para centrar en la columna del empleado
+                'posY': 0.82,  # Más arriba para coincidir con el espacio de 60px
+                'width': 0.30,  # Más ancho para cubrir el área de firma
+                'height': 0.08,  # Más alto para el espacio de firma
             }))
 
         doc_name = doc.name or f"Recibo - {employee.name}"
