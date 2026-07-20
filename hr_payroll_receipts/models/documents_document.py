@@ -103,7 +103,7 @@ class DocumentsDocument(models.Model):
                 'responsible_id': signer_role.id,
                 'page': 1,
                 'posX': 0.13,  # Más a la derecha para centrar en la columna del empleado
-                'posY': 0.75,  # Más arriba de la línea de "Firma del empleado"
+                'posY': 0.70,  # Más arriba de la línea de "Firma del empleado"
                 'width': 0.30,  # Más ancho para cubrir el área de firma
                 'height': 0.05,  # Reducido para que no flote por encima de la línea
             }))
