@@ -29,43 +29,13 @@ class EmployerSignatureWizard(models.TransientModel):
     @api.depends('company_id')
     def _compute_current_signature(self):
         for rec in self:
-            att = self.env['ir.attachment'].sudo().search([
-                ('name', '=', 'employer_signature_payroll'),
-                ('res_model', '=', 'res.company'),
-                ('res_id', '=', rec.company_id.id),
-            ], limit=1)
-            rec.current_signature = att.datas if att else False
-
-    def _save_signature_attachment(self, company, datas):
-        att = self.env['ir.attachment'].sudo().search([
-            ('name', '=', 'employer_signature_payroll'),
-            ('res_model', '=', 'res.company'),
-            ('res_id', '=', company.id),
-        ], limit=1)
-        if att:
-            att.write({'datas': datas})
-        else:
-            self.env['ir.attachment'].sudo().create({
-                'name': 'employer_signature_payroll',
-                'datas': datas,
-                'mimetype': 'image/png',
-                'res_model': 'res.company',
-                'res_id': company.id,
-            })
-
-    def _clear_signature_attachment(self, company):
-        att = self.env['ir.attachment'].sudo().search([
-            ('name', '=', 'employer_signature_payroll'),
-            ('res_model', '=', 'res.company'),
-            ('res_id', '=', company.id),
-        ], limit=1)
-        att.unlink()
+            rec.current_signature = rec.company_id.employer_signature
 
     def action_save(self):
         self.ensure_one()
         if not self.signature:
             raise UserError(_("Por favor ingresá una firma antes de guardar."))
-        self._save_signature_attachment(self.company_id, self.signature)
+        self.company_id.sudo().employer_signature = self.signature
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -79,7 +49,7 @@ class EmployerSignatureWizard(models.TransientModel):
 
     def action_clear(self):
         self.ensure_one()
-        self._clear_signature_attachment(self.company_id)
+        self.company_id.sudo().employer_signature = False
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
