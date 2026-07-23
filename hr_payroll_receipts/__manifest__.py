@@ -25,7 +25,6 @@ Gestión masiva de recibos de sueldo
         'views/documents_views.xml',
         'views/sign_request_views.xml',
         'views/employer_signature_wizard_views.xml',
-        'views/res_config_settings_views.xml',
         'views/menu.xml',
     ],
     'assets': {

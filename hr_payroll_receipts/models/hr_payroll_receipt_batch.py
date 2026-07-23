@@ -165,7 +165,7 @@ class HrPayrollReceiptBatch(models.Model):
     # ── Split ─────────────────────────────────────────────────────────
 
     def action_split(self):
-        """Split the signed PDF into individual pages and auto-match employees."""
+        """Split the signed PDF into individual pages."""
         self.ensure_one()
         pdf_data = self.signed_pdf or self.source_pdf
         if not pdf_data:
@@ -180,13 +180,6 @@ class HrPayrollReceiptBatch(models.Model):
 
         reader = PdfReader(io.BytesIO(base64.b64decode(pdf_data)))
 
-        # Build sequence → employee map
-        employees = self.env['hr.employee'].search([
-            ('payroll_sequence', '>', 0),
-            ('company_id', '=', self.company_id.id),
-        ], order='payroll_sequence')
-        seq_map = {emp.payroll_sequence: emp for emp in employees}
-
         # Clear existing lines
         self.line_ids.unlink()
 
@@ -197,16 +190,14 @@ class HrPayrollReceiptBatch(models.Model):
             buf = io.BytesIO()
             writer.write(buf)
 
-            employee = seq_map.get(idx)
-            emp_label = employee.name if employee else f"pag_{idx}"
-            filename = f"recibo_{self.name.replace(' ', '_')}_{emp_label}.pdf"
+            filename = f"recibo_{self.name.replace(' ', '_')}_pag_{idx}.pdf"
 
             lines_vals.append(Command.create({
                 'sequence': idx,
-                'employee_id': employee.id if employee else False,
+                'employee_id': False,
                 'page_pdf': base64.b64encode(buf.getvalue()),
                 'page_pdf_filename': filename,
-                'state': 'matched' if employee else 'pending',
+                'state': 'pending',
             }))
 
         self.write({

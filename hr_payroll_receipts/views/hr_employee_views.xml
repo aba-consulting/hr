@@ -6,11 +6,7 @@
         <field name="model">hr.employee</field>
         <field name="inherit_id" ref="hr.view_employee_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='hr_settings']" position="inside">
-                <group string="Recibos de Sueldo">
-                    <field name="payroll_sequence"/>
-                </group>
-            </xpath>
+            <data/>
         </field>
     </record>
 
