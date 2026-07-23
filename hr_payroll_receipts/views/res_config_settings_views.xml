@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_hr_payroll_receipts" model="ir.ui.view">
+        <field name="name">res.config.settings.hr.payroll.receipts</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="hr_payroll.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='hr_payroll_settings']" position="after">
+                <block title="Recibos de Sueldo" id="hr_payroll_receipts_settings">
+                    <setting string="Firma del Empleador"
+                        help="Configurá la firma que se estampará en los recibos de sueldo como firma del empleador.">
+                        <div class="mt8">
+                            <button name="%(hr_payroll_receipts.action_hr_payroll_employer_signature_wizard)d"
+                                type="action"
+                                string="Configurar firma del empleador"
+                                class="btn btn-secondary"/>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
